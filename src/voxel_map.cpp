@@ -32,24 +32,24 @@ void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_
   Eigen::Matrix<double, 3, 2> A = range * direction_hat * N;
   cov = direction * range_var * direction.transpose() + A * direction_var * A.transpose();
 }
-
-void loadVoxelConfig(ros::NodeHandle &nh, VoxelMapConfig &voxel_config)
+//发布相关配置参数
+void loadVoxelConfig(ros::NodeHandle &nh, VoxelMapConfig &voxel_config)//从 ROS 参数服务器加载体素地图的配置参数
 {
-  nh.param<bool>("publish/pub_plane_en", voxel_config.is_pub_plane_map_, false);
+  nh.param<bool>("publish/pub_plane_en", voxel_config.is_pub_plane_map_, false);//加载是否发布平面地图的参数
   
   nh.param<int>("lio/max_layer", voxel_config.max_layer_, 1);
   nh.param<double>("lio/voxel_size", voxel_config.max_voxel_size_, 0.5);
-  nh.param<double>("lio/min_eigen_value", voxel_config.planner_threshold_, 0.01);
+  nh.param<double>("lio/min_eigen_value", voxel_config.planner_threshold_, 0.01);//加载体素地图的最大层数、体素大小、特征值阈值等参数
   nh.param<double>("lio/sigma_num", voxel_config.sigma_num_, 3);
   nh.param<double>("lio/beam_err", voxel_config.beam_err_, 0.02);
-  nh.param<double>("lio/dept_err", voxel_config.dept_err_, 0.05);
+  nh.param<double>("lio/dept_err", voxel_config.dept_err_, 0.05);//加载光束误差和深度误差参数
   nh.param<vector<int>>("lio/layer_init_num", voxel_config.layer_init_num_, vector<int>{5,5,5,5,5});
   nh.param<int>("lio/max_points_num", voxel_config.max_points_num_, 50);
-  nh.param<int>("lio/max_iterations", voxel_config.max_iterations_, 5);
+  nh.param<int>("lio/max_iterations", voxel_config.max_iterations_, 5);//加载每层的初始化点数和最大迭代次数
 
   nh.param<bool>("local_map/map_sliding_en", voxel_config.map_sliding_en, false);
   nh.param<int>("local_map/half_map_size", voxel_config.half_map_size, 100);
-  nh.param<double>("local_map/sliding_thresh", voxel_config.sliding_thresh, 8);
+  nh.param<double>("local_map/sliding_thresh", voxel_config.sliding_thresh, 8);//加载局部地图的滑动窗口配置
 }
 
 void VoxelOctoTree::init_plane(const std::vector<pointWithVar> &points, VoxelPlane *plane)
