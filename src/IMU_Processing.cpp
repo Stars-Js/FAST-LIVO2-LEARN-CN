@@ -35,17 +35,17 @@ ImuProcess::ImuProcess() : Eye3d(M3D::Identity()),
 
 ImuProcess::~ImuProcess() {}
 
-void ImuProcess::Reset()
+void ImuProcess::Reset()//重要参数
 {
   ROS_WARN("Reset ImuProcess");
   mean_acc = V3D(0, 0, -1.0);
   mean_gyr = V3D(0, 0, 0);
   angvel_last = Zero3d;
-  imu_need_init = true;
-  init_iter_num = 1;
-  IMUpose.clear();
-  last_imu.reset(new sensor_msgs::Imu());
-  cur_pcl_un_.reset(new PointCloudXYZI());
+  imu_need_init = true;//是否需要初始化IMU
+  init_iter_num = 1;//初始化迭代次数
+  IMUpose.clear();//IMU位姿清空
+  last_imu.reset(new sensor_msgs::Imu());//上一帧IMU初始化
+  cur_pcl_un_.reset(new PointCloudXYZI());//当前帧点云未去畸变初始化
 }
 
 void ImuProcess::disable_imu()
@@ -110,27 +110,27 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, StatesGroup &state_inout, in
   ROS_INFO("IMU Initializing: %.1f %%", double(N) / MAX_INI_COUNT * 100);
   V3D cur_acc, cur_gyr;
 
-  if (b_first_frame)
+  if (b_first_frame)//如果为第一帧IMU
   {
-    Reset();
-    N = 1;
+    Reset();// 调用 Reset() 方法，清空内部变量。
+    N = 1;// 计数 N 设为 1，开始 IMU 初始化。
     b_first_frame = false;
-    const auto &imu_acc = meas.imu.front()->linear_acceleration;
-    const auto &gyr_acc = meas.imu.front()->angular_velocity;
-    mean_acc << imu_acc.x, imu_acc.y, imu_acc.z;
-    mean_gyr << gyr_acc.x, gyr_acc.y, gyr_acc.z;
-    // first_lidar_time = meas.lidar_frame_beg_time;
+    const auto &imu_acc = meas.imu.front()->linear_acceleration;//IMU初始时刻加速度
+    const auto &gyr_acc = meas.imu.front()->angular_velocity;//IMU初始时角速度
+    mean_acc << imu_acc.x, imu_acc.y, imu_acc.z;//第一帧加速度值作为初始化均值
+    mean_gyr << gyr_acc.x, gyr_acc.y, gyr_acc.z;//第一帧角速度值作为初始化均值
+    // first_lidar_time = meas.lidar_frame_beg_time;//当前IMU帧对应的lidar起始时间作为初始时间
     // cout<<"init acc norm: "<<mean_acc.norm()<<endl;
   }
 
-  for (const auto &imu : meas.imu)
+  for (const auto &imu : meas.imu)//遍历 meas.imu 里的 所有 IMU 读数
   {
     const auto &imu_acc = imu->linear_acceleration;
     const auto &gyr_acc = imu->angular_velocity;
-    cur_acc << imu_acc.x, imu_acc.y, imu_acc.z;
+    cur_acc << imu_acc.x, imu_acc.y, imu_acc.z;//计算当前 IMU 传感器的 线性加速度 和 角速度。
     cur_gyr << gyr_acc.x, gyr_acc.y, gyr_acc.z;
 
-    mean_acc += (cur_acc - mean_acc) / N;
+    mean_acc += (cur_acc - mean_acc) / N;//使用 滑动平均法 计算 mean_acc 和 mean_gyr，平滑处理数据：
     mean_gyr += (cur_gyr - mean_gyr) / N;
 
     // cov_acc = cov_acc * (N - 1.0) / N + (cur_acc -
@@ -143,9 +143,9 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, StatesGroup &state_inout, in
     N++;
   }
   IMU_mean_acc_norm = mean_acc.norm();
-  state_inout.gravity = -mean_acc / mean_acc.norm() * G_m_s2;
-  state_inout.rot_end = Eye3d; // Exp(mean_acc.cross(V3D(0, 0, -1 / scale_gravity)));
-  state_inout.bias_g = Zero3d; // mean_gyr;
+  state_inout.gravity = -mean_acc / mean_acc.norm() * G_m_s2;//乘以 重力加速度常数 G_m_s2 = 9.81m/s^2，得到 世界坐标系下的重力向量 state_inout.gravity。
+  state_inout.rot_end = Eye3d; // Exp(mean_acc.cross(V3D(0, 0, -1 / scale_gravity)));//设为单位矩阵，表示初始 旋转矩阵 为 单位旋转矩阵。
+  state_inout.bias_g = Zero3d; // mean_gyr;设为 零偏置，表示初始时假设陀螺仪无偏置
 
   last_imu = meas.imu.back();
 }
@@ -545,14 +545,14 @@ void ImuProcess::UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_
 void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, PointCloudXYZI::Ptr cur_pcl_un_)
 {
   double t1, t2, t3;
-  t1 = omp_get_wtime();
+  t1 = omp_get_wtime();//t1 记录函数开始执行的时间，可能用于后续性能分析。
   ROS_ASSERT(lidar_meas.lidar != nullptr);
   if (!imu_en)
   {
     Forward_without_imu(lidar_meas, stat, *cur_pcl_un_);
     return;
   }
-
+  //lidar_meas.measures 存储的是 多个 LiDAR 扫描帧 及其关联的 IMU 数据。
   MeasureGroup meas = lidar_meas.measures.back();
 
   if (imu_need_init)
@@ -562,7 +562,7 @@ void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, Poin
 
     if (meas.imu.empty()) { return; };
     /// The very first lidar frame
-    IMU_init(meas, stat, init_iter_num);
+    IMU_init(meas, stat, init_iter_num);//init_iter_num 是 IMU 初始化的迭代次数，通常 IMU 需要多帧数据进行初始化（如估计初始重力方向）。
 
     imu_need_init = true;
 

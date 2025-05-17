@@ -210,7 +210,7 @@ void LIVMapper::initializeSubscribersAndPublishers(ros::NodeHandle &nh, image_tr
   voxelmap_manager->voxel_map_pub_= nh.advertise<visualization_msgs::MarkerArray>("/planes", 10000);
 }
 
-void LIVMapper::handleFirstFrame() 
+void LIVMapper::handleFirstFrame() //头帧传入数据 run函数中的
 {
   if (!is_first_frame)
   {
@@ -239,13 +239,13 @@ void LIVMapper::gravityAlignment()
   }
 }
 
-void LIVMapper::processImu() 
+void LIVMapper::processImu() //imu进程
 {
   // double t0 = omp_get_wtime();
 
   p_imu->Process2(LidarMeasures, _state, feats_undistort);
 
-  if (gravity_align_en) gravityAlignment();
+  if (gravity_align_en) gravityAlignment();//引用上面的重力初始化
 
   state_propagat = _state;
   voxelmap_manager->state_ = _state;
@@ -530,21 +530,21 @@ void LIVMapper::run()
   ros::Rate rate(5000);
   while (ros::ok()) 
   {
-    ros::spinOnce();
-    if (!sync_packages(LidarMeasures)) 
+    ros::spinOnce();// 处理回调队列中的消息
+    if (!sync_packages(LidarMeasures)) // 同步LiDAR和IMU数据包
     {
-      rate.sleep();
+      rate.sleep();// 无数据时休眠
       continue;
     }
-    handleFirstFrame();
+    handleFirstFrame();// 处理首帧初始化
 
-    processImu();
+    processImu();// 处理IMU预积分
 
     // if (!p_imu->imu_time_init) continue;
 
-    stateEstimationAndMapping();
+    stateEstimationAndMapping();// 执行状态估计与建图
   }
-  savePCD();
+  savePCD();// 退出时保存点云地图
 }
 
 void LIVMapper::prop_imu_once(StatesGroup &imu_prop_state, const double dt, V3D acc_avr, V3D angvel_avr)
