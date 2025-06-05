@@ -1,85 +1,85 @@
-common:
-  img_topic: "/left_camera/image"
-  lid_topic: "/livox/lidar"
-  imu_topic: "/livox/imu"
-  img_en: 1
-  lidar_en: 1
-  ros_driver_bug_fix: false
+common: # 通用配置参数
+  img_topic: "/left_camera/image" # 左相机图像话题名称
+  lid_topic: "/livox/lidar" # Livox雷达点云话题名称
+  imu_topic: "/livox/imu" # IMU数据话题名称
+  img_en: 1 # 图像处理开关，1开启0关闭
+  lidar_en: 1 # 雷达处理开关，1开启0关闭
+  ros_driver_bug_fix: false # ROS驱动程序错误修复开关
 
-extrin_calib:
-  extrinsic_T: [0.04165, 0.02326, -0.0284]
-  extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-  Rcl: [0.00610193,-0.999863,-0.0154172,
-        -0.00615449,0.0153796,-0.999863,
-        0.999962,0.00619598,-0.0060598] 
-  Pcl: [0.0194384, 0.104689,-0.0251952]
+extrin_calib: # 外参标定配置
+  extrinsic_T: [0.04165, 0.02326, -0.0284] # IMU到雷达的平移向量[x,y,z]
+  extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1] # IMU到雷达的旋转矩阵(行主序)
+  Rcl: [0.00610193,-0.999863,-0.0154172, # 相机到雷达的旋转矩阵
+        -0.00615449,0.0153796,-0.999863, # 第二行旋转参数
+        0.999962,0.00619598,-0.0060598] # 第三行旋转参数
+  Pcl: [0.0194384, 0.104689,-0.0251952] # 相机到雷达的平移向量[x,y,z]
 
-time_offset: 
-  imu_time_offset: 0.0
-  img_time_offset: 0.1
-  exposure_time_init: 0.0
+time_offset: # 时间同步偏移配置
+  imu_time_offset: 0.0 # IMU时间戳偏移量(秒)
+  img_time_offset: 0.1 # 图像时间戳偏移量(秒)
+  exposure_time_init: 0.0 # 初始曝光时间(秒)
 
-preprocess:
-  point_filter_num: 1
-  filter_size_surf: 0.1
+preprocess: # 点云预处理配置
+  point_filter_num: 1 # 点云滤波数量
+  filter_size_surf: 0.1 # 表面点滤波器大小(米)
   lidar_type: 1 # Livox Avia LiDAR
-  scan_line: 6
-  blind: 0.8
+  scan_line: 6 # 扫描线数量
+  blind: 0.8 # 雷达盲区半径(米)
 
-vio:
-  max_iterations: 5
-  outlier_threshold: 1000 # 78 100 156 #100 200 500 700 infinite
-  img_point_cov: 100 # 100 1000 
-  patch_size: 8
-  patch_pyrimid_level: 4
-  normal_en: true
-  raycast_en: false
-  inverse_composition_en: false
-  exposure_estimate_en: true
-  inv_expo_cov: 0.1
+vio: # 视觉惯性里程计配置
+  max_iterations: 5 # 最大迭代次数
+  outlier_threshold: 1000 # 异常值阈值 # 78 100 156 #100 200 500 700 infinite
+  img_point_cov: 100 # 图像点协方差 # 100 1000 
+  patch_size: 8 # 图像块大小(像素)
+  patch_pyrimid_level: 4 # 图像金字塔层数
+  normal_en: true # 法向量估计开关
+  raycast_en: false # 光线投射开关
+  inverse_composition_en: false # 逆向组合开关
+  exposure_estimate_en: true # 曝光估计开关
+  inv_expo_cov: 0.1 # 逆曝光协方差
 
-imu:
-  imu_en: true
-  imu_int_frame: 30
-  acc_cov: 0.5 # 0.2
-  gyr_cov: 0.3 # 0.5
-  b_acc_cov: 0.0001 # 0.1
-  b_gyr_cov: 0.0001 # 0.1
+imu: # IMU配置参数
+  imu_en: true # IMU使能开关
+  imu_int_frame: 30 # IMU积分帧数
+  acc_cov: 0.5 # 加速度计协方差 # 0.2
+  gyr_cov: 0.3 # 陀螺仪协方差 # 0.5
+  b_acc_cov: 0.0001 # 加速度计偏置协方差 # 0.1
+  b_gyr_cov: 0.0001 # 陀螺仪偏置协方差 # 0.1
 
-lio:
-  max_iterations: 5
-  dept_err: 0.02
-  beam_err: 0.05
-  min_eigen_value: 0.0025 # 0.005
-  voxel_size: 0.5
-  max_layer: 2
-  max_points_num: 50
-  layer_init_num: [5, 5, 5, 5, 5]
+lio: # 雷达惯性里程计配置
+  max_iterations: 5 # 最大迭代次数
+  dept_err: 0.02 # 深度误差阈值
+  beam_err: 0.05 # 光束误差阈值
+  min_eigen_value: 0.0025 # 最小特征值阈值 # 0.005
+  voxel_size: 0.5 # 体素大小(米)
+  max_layer: 2 # 最大层数
+  max_points_num: 50 # 最大点数
+  layer_init_num: [5, 5, 5, 5, 5] # 各层初始化点数
 
-local_map:  
-  map_sliding_en: false
-  half_map_size: 100
-  sliding_thresh: 8
+local_map: # 局部地图配置 
+  map_sliding_en: false # 地图滑动使能开关
+  half_map_size: 100 # 半地图大小(米)
+  sliding_thresh: 8 # 滑动阈值
 
-uav:
-  imu_rate_odom: false
-  gravity_align_en: false
+uav: # 无人机配置
+  imu_rate_odom: false # IMU频率里程计开关
+  gravity_align_en: false # 重力对齐使能开关
 
-publish:
-  dense_map_en: true
-  pub_effect_point_en: false 
-  pub_plane_en: false
-  pub_scan_num: 1
-  blind_rgb_points: 0.0
+publish: # 发布配置
+  dense_map_en: true # 密集地图发布开关
+  pub_effect_point_en: false # 有效点发布开关
+  pub_plane_en: false # 平面发布开关
+  pub_scan_num: 1 # 发布扫描数量
+  blind_rgb_points: 0.0 # 盲区RGB点
 
-evo:
-  seq_name: "CBD_Building_01"
-  pose_output_en: false
+evo: # 评估配置
+  seq_name: "CBD_Building_01" # 序列名称
+  pose_output_en: true # 位姿输出开关
 
-pcd_save:
-  pcd_save_en: false
-  colmap_output_en: false # need to set interval = -1
-  filter_size_pcd: 0.15
-  interval: -1
-  # how many LiDAR frames saved in each pcd file;
-  # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+pcd_save: # 点云保存配置
+  pcd_save_en: true # 点云保存开关
+  colmap_output_en: false # Colmap输出开关(需设置interval=-1)
+  filter_size_pcd: 0.15 # 点云滤波器大小
+  interval: -1 # 保存间隔：-1表示保存所有帧
+  # 每个PCD文件保存的激光雷达帧数
+  # -1：所有帧保存在一个PCD文件中，帧数过多可能导致内存崩溃
